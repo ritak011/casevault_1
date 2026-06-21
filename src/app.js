@@ -8,11 +8,31 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const app = express();
 
 // --- Core middleware ---
-app.use(
-  cors({
-    origin: process.env.CLIENT_ORIGIN?.split(',') || '*',
-  })
-);
+// REPLACE your current app.use(cors(...)) with this:
+const allowedOrigins = [
+  process.env.CLIENT_ORIGIN,
+  'https://casevault-2.vercel.app' // Hardcode your frontend URL directly as a backup safety net
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Handle preflight OPTIONS requests explicitly so they don't block uploads
+app.options('*', cors());
+
+
 app.use(express.json()); // parse JSON request bodies
 
 // --- Health check ---
