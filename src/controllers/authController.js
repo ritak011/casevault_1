@@ -9,6 +9,7 @@ const asyncHandler = require('../utils/asyncHandler');
  * pre-save hook), and returns a JWT so the user is logged in immediately.
  */
 const register = asyncHandler(async (req, res) => {
+  console.log("RECEIVED BODY:", req.body);
   const { name, email, password } = req.body;
 
   if (!email || !password) {
