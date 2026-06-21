@@ -174,6 +174,54 @@ const deleteSlide = asyncHandler(async (req, res) => {
   res.json({ success: true, data: { id: req.params.id } });
 });
 
+
+// 1. UPDATE SLIDE METADATA
+exports.updateSlide = async (req, res) => {
+  try {
+    const slide = await Slide.findById(req.params.id);
+
+    if (!slide) {
+      return res.status(404).json({ message: 'Slide not found' });
+    }
+
+    // Optional safety check: Ensure the logged-in user owns the slide
+    if (slide.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'User not authorized to update this slide' });
+    }
+
+    const updatedSlide = await Slide.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({ success: true, data: updatedSlide });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};
+
+// 2. DELETE A SLIDE
+exports.deleteSlide = async (req, res) => {
+  try {
+    const slide = await Slide.findById(req.params.id);
+
+    if (!slide) {
+      return res.status(404).json({ message: 'Slide not found' });
+    }
+
+    // Optional safety check: Ensure the logged-in user owns the slide
+    if (slide.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'User not authorized to delete this slide' });
+    }
+
+    await slide.deleteOne();
+    res.status(200).json({ success: true, message: 'Slide removed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};
+
 module.exports = {
   getSlides,
   getSlideById,
